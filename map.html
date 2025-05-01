@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Interactivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: "Poppins", sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        #cerrarSesion {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            padding: 10px 15px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <button id="cerrarSesion">Cerrar sesión</button>
+    <div id="map"></div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaxktRBxtjrWTWV1aXYHaHs4FzeWcSX1g",
+            authDomain: "ojo-ciudadano-8fc47.firebaseapp.com",
+            projectId: "ojo-ciudadano-8fc47",
+            storageBucket: "ojo-ciudadano-8fc47.appspot.com",
+            messagingSenderId: "114518154337",
+            appId: "1:114518154337:web:a3d2fb65449521a33c5e20",
+            measurementId: "G-ZDGLZMT0BL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Verifica si el usuario está logueado
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            }
+        });
+
+        document.getElementById("cerrarSesion").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                window.location.href = "index.html";
+            } catch (error) {
+                alert("Error al cerrar sesión: " + error.message);
+            }
+        });
+
+        // Inicializar el mapa
+        mapboxgl.accessToken = 'pk.eyJ1IjoidGF0aWFuYXN1ZXNjYSIsImEiOiJjbTllcnJ5dHUxZDk5MnJvbXdmZjcxeGRtIn0.Wd9dPO_b0xTzTO4Je6YTwg';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-74.08175, 4.60971], // Centro aproximado en Bogotá
+            zoom: 12
+        });
+
+        // Agrega control de navegación
+        map.addControl(new mapboxgl.NavigationControl());
+
+        // Agrega marcador al hacer clic en el mapa
+        map.on('click', function (e) {
+            new mapboxgl.Marker()
+                .setLngLat(e.lngLat)
+                .addTo(map);
+        });
+    </script>
+    <script type="module" src="map.js"></script>
+
+</body>
+</html>

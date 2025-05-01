@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reportar Incidente</title>
+  <style>
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background-color: #007bff;
+      color: black;
+      display: flex;
+      justify-content: center;
+      padding: 40px 0;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-transform: capitalize;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .reportes {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    .reporte-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #ffffff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+    }
+    .reporte-texto {
+      flex: 1;
+      min-width: 200px;
+      font-size: 14px;
+      color: #333;
+    }
+    .reporte-texto p {
+      margin: 5px 0;
+    }
+    .reporte-texto b {
+      color: #000;
+    }
+    .imagen-reporte {
+      max-width: 50px;
+      max-height: 50px;
+      margin-left: 15px;
+      border-radius: 5px;
+    }
+    .boton-eliminar {
+      background-color: red;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 120px;
+    }
+    #reportesRecientes {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Reportar Incidente</h2>
+    <form id="formReporte">
+      <div class="form-group">
+        <label for="titulo">Título del incidente</label>
+        <input type="text" id="titulo" required placeholder="Ej: Robo, Asalto..." />
+      </div>
+      <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" rows="3" required placeholder="Describe lo sucedido..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="imagen">Subir Imagen</label>
+        <input type="file" id="imagen" accept="image/*" />
+      </div>
+      <div class="form-group">
+        <button type="button" onclick="obtenerUbicacion()">Obtener Ubicación</button>
+        <input type="text" id="ubicacion" readonly>
+      </div>
+      <button type="submit">Enviar Reporte</button>
+    </form>
+
+    <div class="reportes">
+      <h3>Reportes Recientes</h3>
+      <ul id="listaReportes"></ul>
+      <button id="cerrarSesion" style="margin-top: 20px; background-color: red;">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAaxktRBxtjrWTWV1aXYHaHs4FzeWcSX1g",
+      authDomain: "ojo-ciudadano-8fc47.firebaseapp.com",
+      projectId: "ojo-ciudadano-8fc47",
+      storageBucket: "ojo-ciudadano-8fc47.appspot.com",
+      messagingSenderId: "114518154337",
+      appId: "1:114518154337:web:a3d2fb65449521a33c5e20",
+      measurementId: "G-ZDGLZMT0BL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) window.location.href = "index.html";
+    });
+
+    document.getElementById("cerrarSesion").addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("Error al cerrar sesión: " + error.message);
+      }
+    });
+
+    function convertirABase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById("formReporte").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const titulo = document.getElementById("titulo").value.trim();
+      const descripcion = document.getElementById("descripcion").value.trim();
+      const ubicacionTexto = document.getElementById("ubicacion").value || "";
+      const regex = /Lat:\s*([-.\d]+),\s*Lon:\s*([-.\d]+)/;
+      const match = ubicacionTexto.match(regex);
+      const lat = match ? parseFloat(match[1]) : null;
+      const lng = match ? parseFloat(match[2]) : null;
+      const ubicacion = ubicacionTexto || "Ubicación no especificada";
+      const fecha = new Date().toLocaleString();
+
+      const imagenInput = document.getElementById("imagen");
+      let imagenBase64 = "";
+
+      if (!titulo || !descripcion) {
+        alert("Por favor, completa todos los campos.");
+        return;
+      }
+
+      if (imagenInput.files.length > 0) {
+        imagenBase64 = await convertirABase64(imagenInput.files[0]);
+      }
+
+      const nuevoReporte = { titulo, descripcion, ubicacion, lat, lng, fecha, imagenBase64 };
+
+      try {
+        await addDoc(collection(db, "reportes"), nuevoReporte);
+        agregarReporte(nuevoReporte);
+        e.target.reset();
+      } catch (error) {
+        alert("Error al guardar el reporte: " + error.message);
+      }
+    });
+
+    function agregarReporte(reporte, id = null) {
+      const lista = document.getElementById("listaReportes");
+      const item = document.createElement("li");
+      item.classList.add("reporte-item");
+
+      const imagenHTML = reporte.imagenBase64
+        ? `<img src="${reporte.imagenBase64}" class="imagen-reporte">`
+        : "";
+
+      const botonMapa = (reporte.lat && reporte.lng)
+        ? `<button class="ver-mapa" onclick="verEnMapa(${reporte.lat}, ${reporte.lng})">Ver en el mapa</button>`
+        : "";
+
+      item.innerHTML = `
+        <div class="reporte-texto">
+          <p><b>Título:</b> ${reporte.titulo}</p>
+          <p><b>Descripción:</b> ${reporte.descripcion}</p>
+          <p><b>Fecha:</b> ${reporte.fecha}</p>
+          <p><b>Ubicación:</b> ${reporte.ubicacion}</p>
+          ${botonMapa}
+        </div>
+        ${imagenHTML}
+        ${id ? '<button class="boton-eliminar">Eliminar</button>' : ""}
+      `;
+
+      if (id) {
+        item.querySelector(".boton-eliminar").addEventListener("click", async () => {
+          try {
+            await deleteDoc(doc(db, "reportes", id));
+            item.remove();
+          } catch (error) {
+            alert("Error al eliminar: " + error.message);
+          }
+        });
+      }
+
+      lista.appendChild(item);
+    }
+
+    async function cargarReportes() {
+      const lista = document.getElementById("listaReportes");
+      lista.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "reportes"));
+      snapshot.forEach(doc => {
+        agregarReporte(doc.data(), doc.id);
+      });
+    }
+
+    window.obtenerUbicacion = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            document.getElementById("ubicacion").value = `Lat: ${lat}, Lon: ${lon}`;
+            alert("Ubicación obtenida correctamente.");
+          },
+          (err) => {
+            alert("No se pudo obtener la ubicación: " + err.message);
+          }
+        );
+      } else {
+        alert("La geolocalización no es compatible con este navegador.");
+      }
+    };
+
+    // 🔴 Esta es la función que se llama al hacer clic en "Ver en el mapa"
+    window.verEnMapa = function(lat, lng) {
+      localStorage.setItem("reporteSeleccionado", JSON.stringify({ lat, lng }));
+      window.location.href = "map.html";
+
+    };
+
+
+    document.addEventListener("DOMContentLoaded", cargarReportes);
+    
+  </script>
+</body>
+</html>

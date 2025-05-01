@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bienvenida - Ojo Ciudadano</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "ojo-ciudadano-8fc47.firebaseapp.com",
+      projectId: "ojo-ciudadano-8fc47",
+      storageBucket: "ojo-ciudadano-8fc47.appspot.com",
+      messagingSenderId: "TU_MESSAGING_ID",
+      appId: "TU_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f3f4f6;
+      margin: 0;
+    }
+
+    .card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    h2 {
+      color: #222;
+    }
+
+    p {
+      margin-top: 1rem;
+      color: #555;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-reportes {
+      background-color: #007bff;
+      color: white;
+      margin-right: 10px;
+    }
+
+    .btn-cerrar {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>¡Bienvenido a Ojo Ciudadano! 👁️‍🗨️</h2>
+    <p id="correoUsuario">Cargando...</p>
+
+    <button class="btn-reportes" onclick="irAReportes()">Ir a Reportes</button>
+    <button class="btn-cerrar" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+
+  <script>
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("correoUsuario").textContent = `Has iniciado sesión como: ${user.email}`;
+      } else {
+        window.location.href = "seccion.html"; // Redirige al login si no hay sesión
+      }
+    });
+
+    function irAReportes() {
+      window.location.href = "reportes.html";
+    }
+
+    function cerrarSesion() {
+      auth.signOut().then(() => {
+        window.location.href = "seccion.html";
+      });
+    }
+  </script>
+</body>
+</html>

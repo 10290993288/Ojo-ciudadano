@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Ojo Ciudadano - Iniciar Sesión</title>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaxktRBxtjrWTWV1aXYHaHs4FzeWcSX1g",
+            authDomain: "ojo-ciudadano-8fc47.firebaseapp.com",
+            projectId: "ojo-ciudadano-8fc47",
+            storageBucket: "ojo-ciudadano-8fc47.appspot.com",
+            messagingSenderId: "114518154337",
+            appId: "1:114518154337:web:a3d2fb65449521a33c5e20",
+            measurementId: "G-ZDGLZMT0BL"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+    
+        const mostrarError = (code) => {
+            switch (code) {
+                case "auth/invalid-email":
+                    return "El correo no es válido.";
+                case "auth/user-disabled":
+                    return "Este usuario ha sido deshabilitado.";
+                case "auth/user-not-found":
+                    return "El usuario no existe.";
+                case "auth/wrong-password":
+                case "auth/invalid-credential":
+                    return "Correo o contraseña incorrectos.";
+                case "auth/email-already-in-use":
+                    return "El correo ya está en uso.";
+                case "auth/weak-password":
+                    return "La contraseña debe tener al menos 6 caracteres.";
+                default:
+                    return "Ocurrió un error: " + code;
+            }
+        };
+    
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginBtn = document.getElementById("loginBtn");
+            const registerBtn = document.getElementById("registerBtn");
+    
+            loginBtn.addEventListener("click", async () => {
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+    
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    window.location.href = "reportes.html";
+                } catch (error) {
+                    alert("Error al iniciar sesión: " + mostrarError(error.code));
+                }
+            });
+    
+            registerBtn.addEventListener("click", async () => {
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+    
+                try {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    alert("Usuario registrado correctamente. Ahora puedes iniciar sesión.");
+                } catch (error) {
+                    alert("Error al registrarse: " + mostrarError(error.code));
+                }
+            });
+        });
+    </script>
+
+    
+    
+
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #007bff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ojo Ciudadano</h2>
+        <input type="email" id="email" placeholder="Correo electrónico" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
+        <button id="loginBtn">Iniciar Sesión</button>
+        <button id="registerBtn">Registrarse</button>
+        
+    </div>
+
+</body>
+
+</html>
+
+
+
